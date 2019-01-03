@@ -2,7 +2,11 @@
 $host = 'localhost'; //host
 $port = '9000'; //port
 $null = NULL; //null var
-ini_set('max_execution_time', 3000000000000);
+
+
+
+
+ini_set('max_execution_time', 300000000000000000000000000000000000000000);
 //Create TCP/IP sream socket
 $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 //reuseable port
@@ -52,9 +56,11 @@ while (true) {
 			$user_name = $tst_msg['name']; //sender name
 			$user_message = $tst_msg['message']; //message text
 			$user_color = $tst_msg['color']; //color
+			$user_date = $tst_msg['date']; //color
 			
 			//prepare data to be sent to client
-			$response_text = mask(json_encode(array('type'=>'usermsg', 'name'=>$user_name, 'message'=>$user_message, 'color'=>$user_color)));
+			$response_text = mask(json_encode(array('type'=>'usermsg', 'name'=>$user_name, 'message'=>$user_message, 'color'=>$user_color,'date'=>$user_date)));
+			//saveData($user_name,$user_name,$user_message);
 			send_message($response_text); //send data
 			break 2; //exist this loop
 		}
@@ -72,6 +78,39 @@ while (true) {
 		}
 	}
 }
+
+
+
+//dave data
+
+
+function saveData($sourceUser,$destUser,$message)
+{
+
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "bro4u";
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+} 
+
+$sql = "INSERT INTO `bro4u_chat` (`source_user`, `dest_user`, `send_message`) VALUES ('".$sourceUser."','". $destUser."','".$message."')";
+
+if ($conn->query($sql) === TRUE) {
+    echo "New record created successfully";
+} else {
+    echo "Error: " . $sql . "<br>" . $conn->error;
+}
+
+$conn->close();
+}
+
+
 // close the listening socket
 socket_close($socket);
 

@@ -46,17 +46,40 @@ button#send-message {
     background: #11e0fb;
     box-shadow: 2px 2px 2px #0000001c;
 }
+a{
+
+	cursor:pointer;
+}
 </style>
 </head>
 <body>
 
 <div class="chat-wrapper">
-<div id="message-box"></div>
-<div class="user-panel">
-<input type="text" name="name" id="name" placeholder="Your Name" maxlength="15" />
-<input type="text" name="message" id="message" placeholder="Type your message here..." maxlength="100" />
-<button id="send-message">Send</button>
-</div>
+
+
+	<table style="width:100%">
+	<tr>
+	<td style="width:20%">
+	<div style=" height: 300px; background: #fff;width:100%">
+	<p id="loggedUser">
+	</p>
+	</div>
+	</td>
+
+	<td style="width:80%">
+		<div id="message-box"></div>
+			<div class="user-panel" >
+
+				<input type="text" name="name" id="name" placeholder="Your Name" maxlength="15" />
+				<input type="text" name="message" id="message" placeholder="Type your message here..." maxlength="100" />
+				<button id="send-message">Send</button>
+			</div>
+	</td>
+
+	</tr>
+	</table>
+	
+	
 </div>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
@@ -67,9 +90,12 @@ button#send-message {
 	websocket = new WebSocket(wsUri); 
 	
 	websocket.onopen = function(ev) { // connection is open 
-		msgBox.append('<div class="system_msg" style="color:#bbbbbb">Welcome to my "Demo WebSocket Chat box"!</div>'); //notify user
+		msgBox.append('<div class="system_msg" style="color:#bbbbbb">Welcome to my "Bro4U Chat box"!</div>'); //notify user
 	}
 	// Message received from server
+	var selectedUser="";
+	var singleQoute='"';
+	var loggedInUserList=[];
 	websocket.onmessage = function(ev) {
 		var response 		= JSON.parse(ev.data); //PHP sends Json data
 		
@@ -77,16 +103,35 @@ button#send-message {
 		var user_message 	= response.message; //message text
 		var user_name 		= response.name; //user name
 		var user_color 		= response.color; //color
-
+		var curDate=response.date;
+		var currentUser=$("#name").val();
+		if(user_name!=currentUser && user_name && loggedInUserList.indexOf(user_name)<0) 
+		{
+			
+			loggedInUserList.push(user_name)
+			var fun="selectUser('"+user_name+"',this)";
+			
+			
+			var data='<h4><a class="loggedInUser" style="color:blue;" onclick="'+fun+'">User:'+user_name+'</a></h4>';
+			$("#loggedUser").append(data);
+		}
+		
+	
+		if(selectedUser==user_name)
+		{
+			
 		switch(res_type){
 			case 'usermsg':
-				msgBox.append('<div><span class="user_name" style="color:' + user_color + '">' + user_name + '</span> : <span class="user_message">' + user_message + '</span></div>');
+				msgBox.append('<div><span class="user_name" style="color:green">' + user_name + '</span> : <span class="user_message">' + user_message + '</span></div>');
+				msgBox.append("<div style='text-align:left;display:block;font-size:8px'>" +  curDate + "</div>");
 				break;
 			case 'system':
-				msgBox.append('<div style="color:#bbbbbb">' + user_message + '</div>');
+				msgBox.append("<div style='color:#bbbbbb'>" + user_message + "</div>");
+				msgBox.append("<div style='text-align:right;display:block;font-size:8px'>" +  curDate + "</div>");
 				break;
 		}
 		msgBox[0].scrollTop = msgBox[0].scrollHeight; //scroll message 
+		}
 
 	};
 	
@@ -105,11 +150,22 @@ button#send-message {
 	  }
 	});
 	
+	//select user to chat
+	function selectUser(username,index) {
+		$(".loggedInUser").css('color','blue');
+		$(index).css('color','green');
+		selectedUser=username;
+		msgBox.html("");
+		
+	}
 	//Send message
 	function send_message(){
 		var message_input = $('#message'); //user message text
+		var d = new Date();
+		var curDate=d.getDate()+"-"+(d.getMonth()+1)+"-"+d.getFullYear()+" "+d.getHours()+":"+d.getMinutes()+":"+d.getSeconds();
 		var name_input = $('#name'); //user name
-		
+		msgBox.append("<div style='text-align:right;display:block;'>" +  message_input.val() + ":<b style='color:blue;'>YOU</b></div>");
+		msgBox.append("<div style='text-align:right;display:block;font-size:8px'>" +  curDate + "</div>");
 		if(message_input.val() == ""){ //empty name?
 			alert("Enter your Name please!");
 			return;
@@ -118,10 +174,14 @@ button#send-message {
 			alert("Enter Some message Please!");
 			return;
 		}
+		
+
+
 
 		//prepare json data
 		var msg = {
 			message: message_input.val(),
+			date:curDate,
 			name: name_input.val(),
 			color : '<?php echo $colors[$color_pick]; ?>'
 		};
